@@ -1,5 +1,5 @@
 # Sofmain - Rework
-- updated: 01/15/25
+- updated: 01/18/25
 - lmk what i should put in it!
 - Landen419 loves you all
 - sofmains discord: https://discord.gg/vz9CpEcNED
