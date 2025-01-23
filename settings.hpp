@@ -17,6 +17,11 @@ namespace settings
 	inline int screen_center_y = height / 2;
 	inline bool show_menu = true;
 	inline int tab = 0;
+	float crosshair_thickness = 2.0f;
+	float crosshair_radius = 3.0f;
+	float crosshair_length = 10.0f;
+	//ImU32 crosshair_color = IM_COL32(255, 255, 255, 255); // White
+	inline bool Crosshair;
 	namespace aimbot
 	{
 		inline bool enable = false;
