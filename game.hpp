@@ -176,45 +176,45 @@ using namespace std::chrono;
 
 void Debugg()
 {
-
+	// Get the current time to calculate FPS
 	static auto lastTime = high_resolution_clock::now();
 	static int frameCount = 0;
 
-
+	// Calculate FPS
 	auto currentTime = high_resolution_clock::now();
 	duration<float> deltaTime = currentTime - lastTime;
 	lastTime = currentTime;
 	frameCount++;
 
-
+	// Update FPS every second
 	static float fps = 0.0f;
 	if (deltaTime.count() >= 1.0f) {
 		fps = frameCount / deltaTime.count();
 		frameCount = 0;
 	}
 
+	// Set watermark text
+	const char* text = "[Status: Undedected] - [Developer: SofMain]";
 
-	const char* text = "[Dev: Sofmain Updated by - Landen419] ";
 
-
-
+	// Set FPS text
 	char fpsText[64];
 	snprintf(fpsText, sizeof(fpsText), "FPS: %.2f", fps);
 
-
+	// Combine watermark text and FPS
 	const char* fullText = nullptr;
 	char combinedText[256];
 	snprintf(combinedText, sizeof(combinedText), "%s | %s", text, fpsText);
 	fullText = combinedText;
 
-
-	ImVec2 position = ImVec2(30, 30);
+	// Calculate text size and position
+	ImVec2 position = ImVec2(30, 30); // Starting position of the watermark
 	ImVec2 textSize = ImGui::CalcTextSize(fullText);
 
-
+	// Adjust position based on the text size
 	ImVec2 newPosition = ImVec2(position.x, position.y + textSize.y);
 
-
+	// Draw the watermark with FPS on the screen
 	ImGui::SetCursorPos(newPosition);
 	ImGui::Text("%s", fullText);
 }
@@ -222,7 +222,10 @@ void Debugg()
 ImVec2 GetWatermarkSize()
 {
 	ImVec2 position = ImVec2(30, 30);
-	const char* text = "Sofmain - Fortnite Base";
+	const char* text = "SofMain FN Base [Private Build]";
+
+	//ImVec2 position = ImVec2(30, 30);
+	//const char* text = "Fortnite [Public]";
 
 	ImVec2 textSize = ImGui::CalcTextSize(text);
 	return ImVec2(position.x, position.y + textSize.y);
@@ -264,8 +267,8 @@ void game_loop()
 		Vector2 head2d = project_world_to_screen(head3d);
 		Vector3 bottom3d = get_entity_bone(mesh, 0);
 		Vector2 bottom2d = project_world_to_screen(bottom3d);
-		float box_height = abs(head2d.y - bottom2d.y) * 1.1;
-		float box_width = box_height * 0.35f;
+		float box_height = abs(head2d.y - bottom2d.y);
+		float box_width = box_height * 0.50f;
 		float distance = cache::relative_location.distance(bottom3d) / 100;
 		if (settings::visuals::enable)
 		{
@@ -273,13 +276,13 @@ void game_loop()
 			{
 				if (is_visible(mesh))
 				{
-					Box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(255, 0, 247, 250), 1);
+					Box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(250, 250, 250, 250), 1);
 				}
 				else
 				{
-					Box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(255, 0, 247, 250), 1);
+					Box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(250, 0, 0, 250), 1);
 				}
-				if (settings::visuals::fill_box) draw_filled_rect(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(255, 0, 247, 50));
+				if (settings::visuals::fill_box) draw_filled_rect(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(0, 0, 0, 50));
 			}
 		}
 		if (settings::visuals::enable)
@@ -288,15 +291,15 @@ void game_loop()
 			{
 				if (is_visible(mesh))
 				{
-					draw_cornered_box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(255, 0, 247, 250), 1);
+					draw_cornered_box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(250, 250, 250, 250), 1);
 				}
 				else
 				{
-					draw_cornered_box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(255, 0, 247, 250), 1);
+					draw_cornered_box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(250, 0, 0, 250), 1);
 				}
-				if (settings::visuals::fill_box) draw_filled_rect(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(255, 0, 247, 50));
+				if (settings::visuals::fill_box) draw_filled_rect(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(0, 0, 0, 50));
 			}
-
+			
 			if (settings::visuals::skeleton)
 			{
 				Vector2 bonePositions[16];
@@ -334,8 +337,7 @@ void game_loop()
 				}
 				ImGui::GetBackgroundDrawList()->PopClipRect();
 			}
-
-
+			
 			if (settings::visuals::line)
 			{
 				if (is_visible(mesh))
@@ -352,13 +354,19 @@ void game_loop()
 				draw_distance(bottom2d, distance, ImColor(250, 250, 250, 250));
 			}
 		}
+		double dx = head2d.x - settings::screen_center_x;
+		double dy = head2d.y - settings::screen_center_y;
+		float dist = sqrtf(dx * dx + dy * dy);
+		if (dist <= settings::aimbot::fov && dist < cache::closest_distance)
+		{
+			cache::closest_distance = dist;
+			cache::closest_mesh = mesh;
+		}
 	}
-
 	if (settings::aimbot::enable)
 	{
 		if (GetAsyncKeyState(settings::aimbot::current_key)) aimbot(cache::closest_mesh);
 	}
-
 	if (crosshair::Crosshair)
 	{
 		ImDrawList* draw_list = ImGui::GetForegroundDrawList();
@@ -382,7 +390,6 @@ void game_loop()
 		draw_list->AddLine(horizontal_start, horizontal_end, crosshair_color, crosshair::crosshair_thickness);
 		draw_list->AddLine(vertical_start, vertical_end, crosshair_color, crosshair::crosshair_thickness);
 	}
-
 	if (settings::Features::Watermark) {
 
 		static ImVec4 colorArray[6] = {
@@ -441,24 +448,14 @@ void game_loop()
 
 		ImGui::GetForegroundDrawList()->AddText(position, ImColor(interpolatedColor), text);
 	}
-
-
 	if (settings::Features::Debug) {
+
+
 		Debugg();
-	}
-	if (settings::Exploits::AimInAir)
-	{
-		// heres my example if yu wanna add
-		// memory.Write<bool>(CachePointers.AcknownledgedPawn + 0x5879, true);
-		// the memory handling will be different on the way your driver handles
-	}
-	if (settings::Exploits::no_recoil)
-	{
-		// heres my example if yu wanna add
-		// memory.Write<bool>(CachePointers.AcknownledgedPawn + 0x5879, true);
-		// the memory handling will be different on the way your driver handles
+
 	}
 }
+
 
 #include <vector>
 #include <random>
@@ -469,22 +466,6 @@ struct Snowflake {
 	float size;         // Size of the snowflake
 };
 
-void DrawCustomCursor() {
-	// Get the current mouse position
-	ImVec2 mouse_pos = ImGui::GetMousePos();
-
-	// Get the foreground draw list to draw on top of everything
-	ImDrawList* draw_list = ImGui::GetForegroundDrawList();
-
-	// Define the cursor style (e.g., a small circle)
-	float radius = 5.0f;                          // Cursor radius
-	ImU32 color = IM_COL32(255, 0, 247, 255);   // White color
-	ImU32 border_color = IM_COL32(0, 0, 0, 255);  // Black border
-
-	// Draw the circle cursor
-	draw_list->AddCircleFilled(mouse_pos, radius, color);           // Inner circle
-	draw_list->AddCircle(mouse_pos, radius + 1.0f, border_color);   // Outer border
-}
 
 
 
@@ -528,80 +509,97 @@ void render_snowflakes(bool menuVisible)
 	}
 }
 
-void render_menu()
+void DrawCustomCursor() {
+	// Get the current mouse position
+	ImVec2 mouse_pos = ImGui::GetMousePos();
+
+	// Get the foreground draw list to draw on top of everything
+	ImDrawList* draw_list = ImGui::GetForegroundDrawList();
+
+	// Define the cursor style (e.g., a small circle)
+	float radius = 5.0f;                          // Cursor radius
+	ImU32 color = IM_COL32(255, 0, 247, 255);   // White color
+	ImU32 border_color = IM_COL32(0, 0, 0, 255);  // Black border
+
+	// Draw the circle cursor
+	draw_list->AddCircleFilled(mouse_pos, radius, color);           // Inner circle
+	draw_list->AddCircle(mouse_pos, radius + 1.0f, border_color);   // Outer border
+}
+
+void Crosshair()
 {
-	static float colorTimer = 0.0f;
-	static int currentColorIndex = 0;
-	static int nextColorIndex = 1;
-
-
-	ImVec4 colorArray[6] = {
-		ImVec4(0.63f, 0.13f, 0.94f, 1.0f), // Purple
-		ImVec4(0.0f, 0.0f, 1.0f, 1.0f),    // Blue
-		ImVec4(1.0f, 0.0f, 0.0f, 1.0f),    // Red
-		ImVec4(1.0f, 0.0f, 1.0f, 1.0f),    // Magenta
-		ImVec4(0.0f, 1.0f, 1.0f, 1.0f),    // Baby Blue
-		ImVec4(0.0f, 1.0f, 0.0f, 1.0f),    // Green
-	};
-
-
-	colorTimer += ImGui::GetIO().DeltaTime * 0.5f;
-
-
-	if (colorTimer >= 1.0f)
+	if (ImGui::Checkbox("Crosshair", &settings::Crosshair))
 	{
-		colorTimer = 0.0f;
-		currentColorIndex = nextColorIndex;
-		nextColorIndex = (nextColorIndex + 1) % 6; // cycle to the next color/ yu can change if needed
+		//ImVec4 color = ImGui::ColorConvertU32ToFloat4(settings::crosshair_color);
+		//if (ImGui::ColorEdit4("Crosshair Color", (float*)&color))
+	//	{
+			//settings::crosshair_color = ImGui::ColorConvertFloat4ToU32(color);
+	//	}
+		ImGui::SliderFloat("Thickness", &settings::crosshair_thickness, 1.0f, 10.0f);
+
+		if (settings::Crosshair) // Only show the combo box if the crosshair is enabled
+		{
+
+		}
 	}
 
-	// Interpolate between current and next color
-	ImVec4 currentColor = colorArray[currentColorIndex];
-	ImVec4 nextColor = colorArray[nextColorIndex];
-	ImVec4 interpolatedColor = ImVec4(
-		currentColor.x + (nextColor.x - currentColor.x) * colorTimer,
-		currentColor.y + (nextColor.y - currentColor.y) * colorTimer,
-		currentColor.z + (nextColor.z - currentColor.z) * colorTimer,
-		currentColor.w + (nextColor.w - currentColor.w) * colorTimer
-	);
+}
 
 
-	render_snowflakes(settings::show_menu);
+void render_menu()
+{
+	
+		static float colorTimer = 0.0f;
+		static int currentColorIndex = 0;
+		static int nextColorIndex = 1;
+
+
+		ImVec4 colorArray[6] = {
+			ImVec4(0.63f, 0.13f, 0.94f, 1.0f), // Purple
+			ImVec4(0.0f, 0.0f, 1.0f, 1.0f),    // Blue
+			ImVec4(1.0f, 0.0f, 0.0f, 1.0f),    // Red
+			ImVec4(1.0f, 0.0f, 1.0f, 1.0f),    // Magenta
+			ImVec4(0.0f, 1.0f, 1.0f, 1.0f),    // Baby Blue
+			ImVec4(0.0f, 1.0f, 0.0f, 1.0f),    // Green
+		};
+
+
+		colorTimer += ImGui::GetIO().DeltaTime * 0.5f;
+
+
+		if (colorTimer >= 1.0f)
+		{
+			colorTimer = 0.0f;
+			currentColorIndex = nextColorIndex;
+			nextColorIndex = (nextColorIndex + 1) % 6; // cycle to the next color/ yu can change if needed
+		}
+
+		// Interpolate between current and next color
+		ImVec4 currentColor = colorArray[currentColorIndex];
+		ImVec4 nextColor = colorArray[nextColorIndex];
+		ImVec4 interpolatedColor = ImVec4(
+			currentColor.x + (nextColor.x - currentColor.x) * colorTimer,
+			currentColor.y + (nextColor.y - currentColor.y) * colorTimer,
+			currentColor.z + (nextColor.z - currentColor.z) * colorTimer,
+			currentColor.w + (nextColor.w - currentColor.w) * colorTimer
+		);
+		
+		render_snowflakes(settings::show_menu);
 #ifndef IM_PI
 #define IM_PI 3.14159265358979323846f
 #endif
 
-
-	// Toggle menu visibility
+	switch (settings::aimbot::current_aimkey)
+	{
+	case 0:
+		settings::aimbot::current_key = VK_LBUTTON;
+	case 1:
+		settings::aimbot::current_key = VK_RBUTTON;
+	}
 	if (settings::aimbot::show_fov) ImGui::GetForegroundDrawList()->AddCircle(ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 2), settings::aimbot::fov, ImColor(250, 250, 250, 250), 100, 1.0f);
 	if (GetAsyncKeyState(VK_INSERT) & 1) settings::show_menu = !settings::show_menu;
 	if (settings::show_menu)
-
-	if (settings::aimbot::show_fov)
 	{
-		const int num_segments = 100;
-		const float thickness = 2.5f;
-		const float radius = settings::aimbot::fov;
-		const auto center = ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 2);
-
-		ImDrawList* draw_list = ImGui::GetForegroundDrawList();
-		for (int i = 0; i < num_segments; ++i)
-		{
-			float start_angle = (i * 2 * IM_PI) / num_segments;
-			float end_angle = ((i + 1) * 2 * IM_PI) / num_segments;
-
-			ImVec2 start = ImVec2(center.x + cosf(start_angle) * radius, center.y + sinf(start_angle) * radius);
-			ImVec2 end = ImVec2(center.x + cosf(end_angle) * radius, center.y + sinf(end_angle) * radius);
-
-			ImColor color = ImColor::HSV(i / (float)num_segments, 1.0f, 1.0f);
-			draw_list->AddLine(start, end, color, thickness);
-		}
-	}
-
-	if (settings::show_menu)
-	{
-		ImGui::SetMouseCursor(ImGuiMouseCursor_None);
-		DrawCustomCursor();
 		ImGui::SetNextWindowSize({ 550, 350 });
 		ImGui::Begin("SofMain - External", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 		ImGuiStyle& style = ImGui::GetStyle();
@@ -612,8 +610,6 @@ void render_menu()
 		style.Colors[ImGuiCol_WindowBg] = ImVec4(0.12f, 0.12f, 0.12f, 1.0f);
 		style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.20f, 0.50f, 0.80f, 1.0f);
 		style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.10f, 0.40f, 0.60f, 1.0f);
-
-
 		ImGui::BeginChild("Tabs", ImVec2(150, 0), true);
 		const char* tabs[] = { "Aimbot", "Visuals", "Links", "Exploits", "Exit" };
 		for (int i = 0; i < IM_ARRAYSIZE(tabs); i++)
@@ -650,23 +646,23 @@ void render_menu()
 			ImGui::Checkbox("Line", &settings::visuals::line);
 			ImGui::Checkbox("Distance", &settings::visuals::distance);
 			ImGui::Checkbox("Crosshair", &crosshair::Crosshair);
-				if (crosshair::Crosshair)
+			if (crosshair::Crosshair)
+			{
+
+				ImVec4 color = ImGui::ColorConvertU32ToFloat4(crosshair::crosshair_color);
+
+
+				if (ImGui::ColorEdit4("Crosshair Color", (float*)&color))
 				{
-					
-					ImVec4 color = ImGui::ColorConvertU32ToFloat4(crosshair::crosshair_color);
 
-					
-					if (ImGui::ColorEdit4("Crosshair Color", (float*)&color))
-					{
-						
-						crosshair::crosshair_color = ImGui::ColorConvertFloat4ToU32(color);
-					}
-
-					
-					ImGui::SliderFloat("Thickness", &crosshair::crosshair_thickness, 1.0f, 10.0f);
+					crosshair::crosshair_color = ImGui::ColorConvertFloat4ToU32(color);
 				}
-				break;
+
+
+				ImGui::SliderFloat("Thickness", &crosshair::crosshair_thickness, 1.0f, 10.0f);
 			}
+			break;
+		}
 		case 2:
 		{
 			if (ImGui::Button("Sofmains Discord", { 130, 30 }))
@@ -730,24 +726,24 @@ void render_menu()
 		ImGui::EndChild();
 
 		ImGui::End();
-		}
 	}
+}
 
 HWND get_process_wnd(uint32_t pid)
 {
 	std::pair<HWND, uint32_t> params = { 0, pid };
 	BOOL bresult = EnumWindows([](HWND hwnd, LPARAM lparam) -> BOOL
+	{
+		auto pparams = (std::pair<HWND, uint32_t>*)(lparam);
+		uint32_t processid = 0;
+		if (GetWindowThreadProcessId(hwnd, reinterpret_cast<LPDWORD>(&processid)) && processid == pparams->second)
 		{
-			auto pparams = (std::pair<HWND, uint32_t>*)(lparam);
-			uint32_t processid = 0;
-			if (GetWindowThreadProcessId(hwnd, reinterpret_cast<LPDWORD>(&processid)) && processid == pparams->second)
-			{
-				SetLastError((uint32_t)-1);
-				pparams->first = hwnd;
-				return FALSE;
-			}
-			return TRUE;
-		}, (LPARAM)&params);
+			SetLastError((uint32_t)-1);
+			pparams->first = hwnd;
+			return FALSE;
+		}
+		return TRUE;
+	}, (LPARAM)&params);
 	if (!bresult && GetLastError() == -1 && params.first) return params.first;
 	return 0;
 }
