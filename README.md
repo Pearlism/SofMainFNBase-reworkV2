@@ -1,5 +1,5 @@
-# Sofmain - Rework
-- updated: 01/18/25
+# Sofmain - Rework / Fixed aimbot working now!
+- updated: 01/23/25
 - lmk what i should put in it!
 - Landen419 loves you all
 - sofmains discord: https://discord.gg/vz9CpEcNED
