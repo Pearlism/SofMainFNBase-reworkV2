@@ -291,11 +291,11 @@ void game_loop()
 			{
 				if (is_visible(mesh))
 				{
-					draw_cornered_box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(250, 250, 250, 250), 1);
+					draw_cornered_box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(0, 0, 250, 250), 1);
 				}
 				else
 				{
-					draw_cornered_box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(250, 0, 0, 250), 1);
+					draw_cornered_box(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(0, 0, 255, 250), 1);
 				}
 				if (settings::visuals::fill_box) draw_filled_rect(head2d.x - (box_width / 2), head2d.y, box_width, box_height, ImColor(0, 0, 0, 50));
 			}
@@ -342,11 +342,11 @@ void game_loop()
 			{
 				if (is_visible(mesh))
 				{
-					draw_line(bottom2d, ImColor(250, 250, 250, 250));
+					draw_line(bottom2d, ImColor(0, 0, 250, 250));
 				}
 				else
 				{
-					draw_line(bottom2d, ImColor(250, 0, 0, 250));
+					draw_line(bottom2d, ImColor(0, 0, 255, 250));
 				}
 			}
 			if (settings::visuals::distance)
@@ -428,7 +428,7 @@ void game_loop()
 
 
 		ImVec2 position = ImVec2(30, 30);
-		const char* text = "Sofmain - External Base";
+		const char* text = "Sofmain rework by landen1337";
 
 
 		ImVec2 textSize = ImGui::CalcTextSize(text);
@@ -596,12 +596,60 @@ void render_menu()
 	case 1:
 		settings::aimbot::current_key = VK_RBUTTON;
 	}
-	if (settings::aimbot::show_fov) ImGui::GetForegroundDrawList()->AddCircle(ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 2), settings::aimbot::fov, ImColor(250, 250, 250, 250), 100, 1.0f);
+	if (settings::aimbot::show_fov) {
+		// Predefined set of fixed colors
+		static std::vector<ImColor> colors = {
+			ImColor(255, 0, 0, 250),   // Red
+			ImColor(0, 255, 0, 250),   // Green
+			ImColor(0, 0, 255, 250),   // Blue
+			ImColor(255, 255, 0, 250)  // Yellow
+		};
+
+		static int colorIndex = 0;          // Current color index
+		static int nextColorIndex = 1;      // Next target color index
+		static float transitionProgress = 0.0f;  // Transition progress (0 to 1)
+
+		// Get current and next colors
+		ImColor currentColor = colors[colorIndex];
+		ImColor nextColor = colors[nextColorIndex];
+
+		// Interpolate between colors
+		ImVec4 currentVec = currentColor.Value;
+		ImVec4 nextVec = nextColor.Value;
+
+		// LERP between current and next color
+		ImVec4 blendedColor = ImVec4(
+			currentVec.x + (nextVec.x - currentVec.x) * transitionProgress,
+			currentVec.y + (nextVec.y - currentVec.y) * transitionProgress,
+			currentVec.z + (nextVec.z - currentVec.z) * transitionProgress,
+			currentVec.w + (nextVec.w - currentVec.w) * transitionProgress
+		);
+
+		// Draw the FOV circle with the blended color
+		ImGui::GetForegroundDrawList()->AddCircle(
+			ImVec2(ImGui::GetIO().DisplaySize.x / 2, ImGui::GetIO().DisplaySize.y / 2),
+			settings::aimbot::fov,
+			ImGui::ColorConvertFloat4ToU32(blendedColor),
+			100,
+			1.0f
+		);
+
+		// Increment transition progress over time
+		transitionProgress += ImGui::GetIO().DeltaTime * 1.5f;  // Adjust speed here
+
+		// When transition completes, move to the next color
+		if (transitionProgress >= 1.0f) {
+			transitionProgress = 0.0f;
+			colorIndex = nextColorIndex;
+			nextColorIndex = (nextColorIndex + 1) % colors.size();
+		}
+	}
+
 	if (GetAsyncKeyState(VK_INSERT) & 1) settings::show_menu = !settings::show_menu;
 	if (settings::show_menu)
 	{
 		ImGui::SetNextWindowSize({ 550, 350 });
-		ImGui::Begin("SofMain - External", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
+		ImGui::Begin("Sofmain rework by landen1337", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.FrameRounding = 10.0f;
 		style.WindowRounding = 10.0f;
@@ -648,19 +696,53 @@ void render_menu()
 			ImGui::Checkbox("Crosshair", &crosshair::Crosshair);
 			if (crosshair::Crosshair)
 			{
-
+				// Convert crosshair color from U32 to ImVec4 format for easy manipulation
 				ImVec4 color = ImGui::ColorConvertU32ToFloat4(crosshair::crosshair_color);
 
-
-				if (ImGui::ColorEdit4("Crosshair Color", (float*)&color))
+				// Create a color menu for adjusting the crosshair color
+				if (ImGui::BeginCombo("Select Crosshair Color", "Select Color"))
 				{
+					if (ImGui::ColorEdit4("Custom Color", (float*)&color, ImGuiColorEditFlags_AlphaPreviewHalf))
+					{
+						// After the color is modified, convert it back to U32 and store it
+						crosshair::crosshair_color = ImGui::ColorConvertFloat4ToU32(color);
+					}
 
-					crosshair::crosshair_color = ImGui::ColorConvertFloat4ToU32(color);
+					// You can also provide preset color options
+					if (ImGui::Selectable("Red"))
+					{
+						color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+						crosshair::crosshair_color = ImGui::ColorConvertFloat4ToU32(color);
+					}
+					if (ImGui::Selectable("Green"))
+					{
+						color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+						crosshair::crosshair_color = ImGui::ColorConvertFloat4ToU32(color);
+					}
+					if (ImGui::Selectable("Blue"))
+					{
+						color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+						crosshair::crosshair_color = ImGui::ColorConvertFloat4ToU32(color);
+					}
+					if (ImGui::Selectable("White"))
+					{
+						color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+						crosshair::crosshair_color = ImGui::ColorConvertFloat4ToU32(color);
+					}
+					if (ImGui::Selectable("Yellow"))
+					{
+						color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+						crosshair::crosshair_color = ImGui::ColorConvertFloat4ToU32(color);
+					}
+
+					// End the color selection menu
+					ImGui::EndCombo();
 				}
 
-
+				// Slider for adjusting the thickness of the crosshair
 				ImGui::SliderFloat("Thickness", &crosshair::crosshair_thickness, 1.0f, 10.0f);
 			}
+
 			break;
 		}
 		case 2:
@@ -707,7 +789,7 @@ void render_menu()
 
 			ImGui::SetCursorPos(ImVec2(20, 50));
 			ImGui::TextColored(messageColor, "Exploits don't have functions");
-
+			//heres your exploits via case3
 			ImGui::SetCursorPos(ImVec2(20, 70));
 			ImGui::TextColored(messageColor, "so you have to add them to work");
 
